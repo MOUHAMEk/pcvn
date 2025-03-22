@@ -1,0 +1,1327 @@
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site de génération des PV</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <style>
+.custom-section {
+    position: relative;
+    margin: 20px 0;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+}
+
+.section-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.section-checkbox {
+    width: 20px;
+    height: 20px;
+}
+
+.delete-section {
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.move-up, .move-down {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #007bff;
+    padding: 0 5px;
+}
+
+.move-up:hover, .move-down:hover {
+    color: #0056b3;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+.container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+h1, h2 {
+    color: #0056b3;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    text-align: center;
+    font-size: 16px;
+    margin: 10px auto;
+    display: block;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 80%;
+    max-width: 300px;
+}
+
+button:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+input[type="date"],
+select,
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0 20px 0;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+.hidden {
+    display: none;
+}
+
+.step {
+    margin-top: 20px;
+}
+
+#pdfImages img {
+    width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+#pdfImages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.title {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.logo-upload {
+    text-align: center;
+    margin: 20px 0;
+    padding: 15px;
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+}
+
+.logo-preview {
+    max-width: 200px;
+    max-height: 100px;
+    margin: 10px auto;
+    display: none;
+    border: 1px solid #ddd;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.logo-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.size-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.size-btn:hover {
+    background: #0056b3;
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.size-btn:active {
+    transform: scale(0.95);
+}
+
+#sizeDisplay {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 18px;
+    min-width: 60px;
+    text-align: center;
+    color: #333;
+    background: #f8f9fa;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+@media (max-width: 600px) {
+    .logo-upload {
+        margin: 10px;
+        padding: 10px;
+    }
+    
+    .logo-preview {
+        max-width: 150px;
+    }
+}
+
+.section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+textarea {
+    width: 100%;
+    max-width: 600px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    resize: vertical;
+    background-color: #fefefe;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+}
+
+.personnel-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.add-personnel {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    color: #0056b3;
+    margin-top: 10px;
+    padding: 8px;
+    border: 1px dashed #0056b3;
+    border-radius: 5px;
+}
+
+.add-personnel:hover {
+    background-color: #f0f8ff;
+}
+
+.role-input {
+    flex: 1;
+    min-width: 150px;
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+}
+
+.remove-role {
+    color: #dc3545;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 20px;
+    padding: 0 8px;
+}
+
+.remove-role:hover {
+    color: #bb2d3b;
+}
+
+.editable-title {
+    cursor: pointer;
+    border-bottom: 2px dashed transparent;
+    transition: all 0.3s;
+}
+
+.editable-title:hover {
+    border-color: #007bff;
+}
+
+.editable-title:focus {
+    outline: none;
+    border-bottom: 2px solid #007bff;
+}
+
+@media (min-width: 768px) {
+    #pdfImages img {
+        width: 75%;
+    }
+}
+
+@media (min-width: 1024px) {
+    #pdfImages img {
+        width: 50%;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    button {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+/* Styles pour la popup */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: 300px;
+}
+
+.popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.popup select, .popup input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 8px;
+}
+
+.popup button {
+    width: 45%;
+    margin: 10px 2.5%;
+}
+    </style>
+</head>
+<body onload="loadData()">
+    <div class="container">
+        <div class="logo-upload">
+            <input type="file" id="logoInput" accept="image/*" onchange="previewLogo(event)">
+            <img id="logoPreview" class="logo-preview" alt="Aperçu du logo">
+            <div class="logo-controls">
+                <button class="size-btn" onclick="adjustLogoSize(-0.1)">-</button>
+                <span id="sizeDisplay">100%</span>
+                <button class="size-btn" onclick="adjustLogoSize(0.1)">+</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1>Bienvenue dans le Système de Génération des PV du Chantier</h1>
+        <button id="startButton">Commencer</button>
+    
+        <!-- Étape de sélection de date -->
+        <div id="daySelection" class="hidden step">
+            <h2>Choisissez le jour du PV :</h2>
+            <input type="date" id="inspectionDate" required>
+            <button id="continueDayButton">Continuer</button>
+        </div>
+    
+        <!-- Contenu principal -->
+        <div id="section2" class="hidden step">
+            <div id="allSections">
+                <!-- Section Description du Projet -->
+                <div class="custom-section" id="descriptionSection">
+                    <div class="section-controls">
+                        <input type="checkbox" class="section-checkbox" checked>
+                        <span class="delete-section" onclick="this.parentElement.parentElement.remove()">×</span>
+                        <button class="move-up" onclick="moveSectionUp(this.parentElement.parentElement)">↑</button>
+                        <button class="move-down" onclick="moveSectionDown(this.parentElement.parentElement)">↓</button>
+                    </div>
+                    <h3 class="editable-title" contenteditable="true" id="descriptionProjetTitle">Description du Projet</h3>
+                    <div class="section">
+                        <label for="nomProjet">Nom du projet :</label>
+                        <input type="text" id="nomProjet">
+                        <label for="entreprise">Entreprise :</label>
+                        <input type="text" id="entreprise">
+                        <label for="maitreOuvrage">Maître d'ouvrage :</label>
+                        <input type="text" id="maitreOuvrage">
+                        <label for="bureauSuivi">Bureau de suivi :</label>
+                        <input type="text" id="bureauSuivi">
+                        <label for="commune">Commune :</label>
+                        <input type="text" id="commune">
+                    </div>
+                </div>
+        
+                <!-- Section Personnel -->
+                <div class="custom-section" id="personnelSection">
+                    <div class="section-controls">
+                        <input type="checkbox" class="section-checkbox" checked>
+                        <span class="delete-section" onclick="this.parentElement.parentElement.remove()">×</span>
+                        <button class="move-up" onclick="moveSectionUp(this.parentElement.parentElement)">↑</button>
+                        <button class="move-down" onclick="moveSectionDown(this.parentElement.parentElement)">↓</button>
+                    </div>
+                    <h3 class="editable-title" contenteditable="true" id="personnelTitle">Liste des Personnes Présentes</h3>
+                    <div class="section" id="personnelSectionInner">
+                        <div id="personnelList"></div>
+                        <div class="add-personnel" onclick="addPersonnelField()">
+                            <span>+</span> Ajouter un autre personnel
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Section Stock -->
+                <div class="custom-section" id="stockSection">
+                    <div class="section-controls">
+                        <input type="checkbox" class="section-checkbox" checked>
+                        <span class="delete-section" onclick="this.parentElement.parentElement.remove()">×</span>
+                        <button class="move-up" onclick="moveSectionUp(this.parentElement.parentElement)">↑</button>
+                        <button class="move-down" onclick="moveSectionDown(this.parentElement.parentElement)">↓</button>
+                    </div>
+                    <h3 class="editable-title" contenteditable="true" id="stockTitle">État du Stock sur Chantier</h3>
+                    <div class="section" id="stockSectionInner">
+                        <div id="stockList"></div>
+                        <div class="add-personnel" onclick="addStockField()">
+                            <span>+</span> Ajouter un article
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Sections personnalisées ajoutées -->
+                <div id="customSections"></div>
+            </div>
+            
+            <!-- Nouveau bouton unique -->
+            <button onclick="showSectionPopup()" style="background-color: #007bff; margin-top: 20px;">
+                + Ajouter une nouvelle section
+            </button>
+    
+            <h1>Ajoutez les Images </h1>
+            <input type="file" id="photo1" accept="image/*">
+            <input type="text" id="caption1" placeholder="Légende pour la photo 1">
+            <input type="file" id="photo2" accept="image/*">
+            <input type="text" id="caption2" placeholder="Légende pour la photo 2">
+            <input type="file" id="photo3" accept="image/*">
+            <input type="text" id="caption3" placeholder="Légende pour la photo 3">
+            <input type="file" id="photo4" accept="image/*">
+            <input type="text" id="caption4" placeholder="Légende pour la photo 4">
+
+            <!-- Nouvelle section Transmettre à -->
+            <div class="custom-section" id="transmitSection">
+                <div class="section-controls">
+                    <input type="checkbox" class="section-checkbox" checked>
+                </div>
+                <h3 class="editable-title" contenteditable="true">Transmettre à</h3>
+                <textarea id="transmitContent" rows="4" placeholder="Entrez les destinataires ici..."></textarea>
+            </div>
+
+            <button onclick="enregistrer()">Enregistrer le PV</button>
+            <button id="previewPdfButton" style="display:none;">Aperçu du PDF</button>
+            <button id="sendPdfButton" style="display:none;">Télécharger le pdf</button>
+            <button id="generatePdfButton">Générer le PDF</button>
+            <div id="pdfImages"></div>
+        </div>
+
+        <div id="pdfPreview" style="display: none;">
+            <div id="pdfImages"></div>
+        </div>
+        <div id="pdfSection"></div>
+
+        <!-- Popup pour ajouter une section -->
+        <div class="popup-overlay" id="popupOverlay"></div>
+        <div class="popup" id="sectionPopup">
+            <h3>Ajouter une nouvelle section</h3>
+            <input type="text" id="newSectionTitle" placeholder="Titre de la section">
+            <select id="positionSelect">
+                <option value="above">Au-dessus</option>
+                <option value="below">Au-dessous</option>
+            </select>
+            <select id="referenceSection">
+                <!-- Les options seront remplies dynamiquement -->
+            </select>
+            <button onclick="addNewSection()" style="background-color: #28a745;">Ajouter</button>
+            <button onclick="closePopup()" style="background-color: #dc3545;">Annuler</button>
+        </div>
+
+        <script>
+let customSections = [];
+let allSectionsOrder = [
+    'descriptionSection',
+    'personnelSection',
+    'stockSection'
+];
+
+function moveSectionUp(section) {
+    const previousSibling = section.previousElementSibling;
+    if (previousSibling && previousSibling.classList.contains('custom-section')) {
+        section.parentNode.insertBefore(section, previousSibling);
+        updateSectionsOrder();
+    }
+}
+
+function moveSectionDown(section) {
+    const nextSibling = section.nextElementSibling;
+    if (nextSibling && nextSibling.classList.contains('custom-section')) {
+        section.parentNode.insertBefore(nextSibling, section);
+        updateSectionsOrder();
+    }
+}
+
+function updateSectionsOrder() {
+    const allSectionsContainer = document.getElementById('allSections');
+    const sections = allSectionsContainer.querySelectorAll('.custom-section');
+    allSectionsOrder = Array.from(sections).map(section => section.id);
+    enregistrer();
+}
+
+function showSectionPopup() {
+    const popup = document.getElementById('sectionPopup');
+    const overlay = document.getElementById('popupOverlay');
+    const referenceSelect = document.getElementById('referenceSection');
+    const section2 = document.getElementById('section2');
+    
+    if (section2.classList.contains('hidden')) {
+        alert('Veuillez d\'abord sélectionner une date pour commencer.');
+        return;
+    }
+
+    referenceSelect.innerHTML = '';
+    
+    const savedData = JSON.parse(localStorage.getItem('pvData')) || {};
+    const savedSections = savedData.sections || [];
+
+    const allSections = allSectionsOrder.map(id => {
+        const sectionElement = document.getElementById(`${id.replace('Section', 'Title')}`);
+        if (['descriptionSection', 'personnelSection', 'stockSection'].includes(id)) {
+            const defaultTitles = {
+                'descriptionSection': 'Description du Projet',
+                'personnelSection': 'Liste des Personnes Présentes',
+                'stockSection': 'État du Stock sur Chantier'
+            };
+            const savedSection = savedSections.find(s => s.id === id);
+            const title = sectionElement ? sectionElement.textContent : 
+                         (savedSection ? savedSection.title : defaultTitles[id]);
+            return { id, title };
+        } else {
+            const section = customSections.find(s => s.id === id);
+            return { id, title: section ? section.title : 'Section inconnue' };
+        }
+    });
+    
+    allSections.forEach(section => {
+        const option = document.createElement('option');
+        option.value = section.id;
+        option.textContent = section.title;
+        referenceSelect.appendChild(option);
+    });
+    
+    popup.style.display = 'block';
+    overlay.style.display = 'block';
+}
+
+function closePopup() {
+    document.getElementById('sectionPopup').style.display = 'none';
+    document.getElementById('popupOverlay').style.display = 'none';
+}
+
+function addNewSection() {
+    const title = document.getElementById('newSectionTitle').value;
+    const position = document.getElementById('positionSelect').value;
+    const referenceId = document.getElementById('referenceSection').value;
+    const id = 'section_' + Date.now();
+    
+    if (!title) {
+        alert('Veuillez entrer un titre pour la section');
+        return;
+    }
+    
+    const sectionHTML = `
+        <div class="custom-section" id="${id}">
+            <div class="section-controls">
+                <input type="checkbox" class="section-checkbox" checked>
+                <span class="delete-section" onclick="deleteCustomSection('${id}')">×</span>
+                <button class="move-up" onclick="moveSectionUp(this.parentElement.parentElement)">↑</button>
+                <button class="move-down" onclick="moveSectionDown(this.parentElement.parentElement)">↓</button>
+            </div>
+            <h3 class="editable-title" contenteditable="true">${title}</h3>
+            <textarea rows="4"></textarea>
+        </div>
+    `;
+    
+    const allSectionsContainer = document.getElementById('allSections');
+    const referenceIndex = allSectionsOrder.indexOf(referenceId);
+    
+    if (referenceIndex !== -1) {
+        const referenceElement = document.getElementById(referenceId);
+        if (position === 'above') {
+            referenceElement.insertAdjacentHTML('beforebegin', sectionHTML);
+            allSectionsOrder.splice(referenceIndex, 0, id);
+        } else {
+            referenceElement.insertAdjacentHTML('afterend', sectionHTML);
+            allSectionsOrder.splice(referenceIndex + 1, 0, id);
+        }
+    } else {
+        allSectionsContainer.insertAdjacentHTML('beforeend', sectionHTML);
+        allSectionsOrder.push(id);
+    }
+    
+    customSections.push({ id, title, position, referenceId, content: '' });
+    closePopup();
+    document.getElementById('newSectionTitle').value = '';
+    enregistrer();
+}
+
+function deleteCustomSection(id) {
+    const section = document.getElementById(id);
+    if (section) {
+        section.remove();
+        customSections = customSections.filter(section => section.id !== id);
+        allSectionsOrder = allSectionsOrder.filter(sectionId => sectionId !== id);
+        enregistrer();
+    }
+}
+
+let logoScale = 1.0;
+
+function adjustLogoSize(delta) {
+    logoScale = Math.max(0.5, Math.min(2.0, logoScale + delta));
+    document.getElementById('sizeDisplay').textContent = 
+        Math.round(logoScale * 100) + '%';
+}
+
+function previewLogo(event) {
+    const input = event.target;
+    const preview = document.getElementById('logoPreview');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function addPersonnelField(role = '', count = '') {
+    const personnelList = document.getElementById('personnelList');
+    const newItem = document.createElement('div');
+    newItem.className = 'personnel-item';
+    newItem.innerHTML = `
+        <input type="text" class="role-input" value="${role}" placeholder="Nom du rôle">
+        <input type="number" placeholder="Nombre" value="${count}">
+        <span class="remove-role" onclick="this.parentElement.remove()">×</span>
+    `;
+    personnelList.appendChild(newItem);
+}
+
+function addStockField(name = '', quantity = '') {
+    const stockList = document.getElementById('stockList');
+    const newItem = document.createElement('div');
+    newItem.className = 'personnel-item';
+    newItem.innerHTML = `
+        <input type="text" class="role-input" value="${name}" placeholder="Nom de l'article">
+        <input type="text" placeholder="Quantité" value="${quantity}">
+        <span class="remove-role" onclick="this.parentElement.remove()">×</span>
+    `;
+    stockList.appendChild(newItem);
+}
+
+function enregistrer() {
+    const logoInput = document.getElementById('logoInput');
+    const reader = new FileReader();
+
+    if (logoInput.files[0]) {
+        reader.readAsDataURL(logoInput.files[0]);
+    }
+
+    const personnelData = [];
+    const stockData = [];
+    const savedSections = [];
+
+    document.querySelectorAll('#personnelList .personnel-item').forEach(item => {
+        const inputs = item.querySelectorAll('input');
+        if (inputs[0] && inputs[0].value.trim()) {
+            personnelData.push({
+                role: inputs[0].value,
+                count: inputs[1].value
+            });
+        }
+    });
+
+    document.querySelectorAll('#stockList .personnel-item').forEach(item => {
+        const inputs = item.querySelectorAll('input');
+        if (inputs[0] && inputs[0].value.trim()) {
+            stockData.push({
+                name: inputs[0].value,
+                quantity: inputs[1].value
+            });
+        }
+    });
+
+    document.querySelectorAll('.custom-section').forEach(section => {
+        const titleElement = section.querySelector('h3');
+        const textareaElement = section.querySelector('textarea');
+        const checkboxElement = section.querySelector('.section-checkbox');
+        
+        if (titleElement && checkboxElement) {
+            const sectionData = {
+                id: section.id,
+                title: titleElement.textContent,
+                content: textareaElement ? textareaElement.value : '',
+                checked: checkboxElement.checked
+            };
+            if (section.id.startsWith('section_')) {
+                const customSection = customSections.find(s => s.id === section.id);
+                if (customSection) {
+                    sectionData.position = customSection.position;
+                    sectionData.referenceId = customSection.referenceId;
+                }
+            }
+            savedSections.push(sectionData);
+        }
+    });
+
+    const transmitContent = document.getElementById('transmitContent').value;
+
+    const data = {
+        logo: reader.result || document.getElementById('logoPreview').src,
+        logoScale: logoScale,
+        nomProjet: document.getElementById('nomProjet').value,
+        entreprise: document.getElementById('entreprise').value,
+        maitreOuvrage: document.getElementById('maitreOuvrage').value,
+        bureauSuivi: document.getElementById('bureauSuivi').value,
+        commune: document.getElementById('commune').value,
+        personnel: personnelData,
+        stock: stockData,
+        sections: savedSections,
+        sectionsOrder: allSectionsOrder,
+        transmitContent: transmitContent
+    };
+
+    localStorage.setItem('pvData', JSON.stringify(data));
+    alert('Données enregistrées avec succès.');
+}
+
+function loadData() {
+    const savedData = localStorage.getItem('pvData');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+
+        if (data.logo) {
+            document.getElementById('logoPreview').src = data.logo;
+            document.getElementById('logoPreview').style.display = 'block';
+        }
+
+        if (data.logoScale) {
+            logoScale = data.logoScale;
+            document.getElementById('sizeDisplay').textContent = Math.round(logoScale * 100) + '%';
+        }
+
+        document.getElementById('nomProjet').value = data.nomProjet || '';
+        document.getElementById('entreprise').value = data.entreprise || '';
+        document.getElementById('maitreOuvrage').value = data.maitreOuvrage || '';
+        document.getElementById('bureauSuivi').value = data.bureauSuivi || '';
+        document.getElementById('commune').value = data.commune || '';
+
+        const personnelList = document.getElementById('personnelList');
+        personnelList.innerHTML = '';
+        if (data.personnel) {
+            data.personnel.forEach(person => {
+                addPersonnelField(person.role, person.count);
+            });
+        }
+
+        const stockList = document.getElementById('stockList');
+        stockList.innerHTML = '';
+        if (data.stock) {
+            data.stock.forEach(item => {
+                addStockField(item.name, item.quantity);
+            });
+        }
+
+        const allSectionsContainer = document.getElementById('allSections');
+        customSections = [];
+        allSectionsOrder = data.sectionsOrder || ['descriptionSection', 'personnelSection', 'stockSection'];
+
+        allSectionsContainer.innerHTML = '';
+        allSectionsOrder.forEach(sectionId => {
+            const sectionData = data.sections.find(s => s.id === sectionId);
+            if (!sectionData) return;
+
+            if (sectionId === 'descriptionSection') {
+                allSectionsContainer.innerHTML += `
+                    <div class="custom-section" id="descriptionSection">
+                        <div class="section-controls">
+                            <input type="checkbox" class="section-checkbox" ${sectionData.checked ? 'checked' : ''}>
+                            <span class="delete-section" onclick="this.parentElement.parentElement.remove()">×</span>
+                            <button class="move-up" onclick="moveSectionUp(this.parentElement.parentElement)">↑</button>
+                            <button class="move-down" onclick="moveSectionDown(this.parentElement.parentElement)">↓</button>
+                        </div>
+                        <h3 class="editable-title" contenteditable="true" id="descriptionProjetTitle">${sectionData.title}</h3>
+                        <div class="section">
+                            <label for="nomProjet">Nom du projet :</label>
+                            <input type="text" id="nomProjet" value="${data.nomProjet || ''}">
+                            <label for="entreprise">Entreprise :</label>
+                            <input type="text" id="entreprise" value="${data.entreprise || ''}">
+                            <label for="maitreOuvrage">Maître d'ouvrage :</label>
+                            <input type="text" id="maitreOuvrage" value="${data.maitreOuvrage || ''}">
+                            <label for="bureauSuivi">Bureau de suivi :</label>
+                            <input type="text" id="bureauSuivi" value="${data.bureauSuivi || ''}">
+                            <label for="commune">Commune :</label>
+                            <input type="text" id="commune" value="${data.commune || ''}">
+                        </div>
+                    </div>
+                `;
+            } else if (sectionId === 'personnelSection') {
+                allSectionsContainer.innerHTML += `
+                    <div class="custom-section" id="personnelSection">
+                        <div class="section-controls">
+                            <input type="checkbox" class="section-checkbox" ${sectionData.checked ? 'checked' : ''}>
+                            <span class="delete-section" onclick="this.parentElement.parentElement.remove()">×</span>
+                            <button class="move-up" onclick="moveSectionUp(this.parentElement.parentElement)">↑</button>
+                            <button class="move-down" onclick="moveSectionDown(this.parentElement.parentElement)">↓</button>
+                        </div>
+                        <h3 class="editable-title" contenteditable="true" id="personnelTitle">${sectionData.title}</h3>
+                        <div class="section" id="personnelSectionInner">
+                            <div id="personnelList"></div>
+                            <div class="add-personnel" onclick="addPersonnelField()">
+                                <span>+</span> Ajouter un autre personnel
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (data.personnel) {
+                    data.personnel.forEach(person => addPersonnelField(person.role, person.count));
+                }
+            } else if (sectionId === 'stockSection') {
+                allSectionsContainer.innerHTML += `
+                    <div class="custom-section" id="stockSection">
+                        <div class="section-controls">
+                            <input type="checkbox" class="section-checkbox" ${sectionData.checked ? 'checked' : ''}>
+                            <span class="delete-section" onclick="this.parentElement.parentElement.remove()">×</span>
+                            <button class="move-up" onclick="moveSectionUp(this.parentElement.parentElement)">↑</button>
+                            <button class="move-down" onclick="moveSectionDown(this.parentElement.parentElement)">↓</button>
+                        </div>
+                        <h3 class="editable-title" contenteditable="true" id="stockTitle">${sectionData.title}</h3>
+                        <div class="section" id="stockSectionInner">
+                            <div id="stockList"></div>
+                            <div class="add-personnel" onclick="addStockField()">
+                                <span>+</span> Ajouter un article
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (data.stock) {
+                    data.stock.forEach(item => addStockField(item.name, item.quantity));
+                }
+            } else {
+                const sectionHTML = `
+                    <div class="custom-section" id="${sectionData.id}">
+                        <div class="section-controls">
+                            <input type="checkbox" class="section-checkbox" ${sectionData.checked ? 'checked' : ''}>
+                            <span class="delete-section" onclick="deleteCustomSection('${sectionData.id}')">×</span>
+                            <button class="move-up" onclick="moveSectionUp(this.parentElement.parentElement)">↑</button>
+                            <button class="move-down" onclick="moveSectionDown(this.parentElement.parentElement)">↓</button>
+                        </div>
+                        <h3 class="editable-title" contenteditable="true">${sectionData.title}</h3>
+                        <textarea rows="4">${sectionData.content || ''}</textarea>
+                    </div>
+                `;
+                allSectionsContainer.insertAdjacentHTML('beforeend', sectionHTML);
+                customSections.push({
+                    id: sectionData.id,
+                    title: sectionData.title,
+                    position: sectionData.position,
+                    referenceId: sectionData.referenceId,
+                    content: sectionData.content
+                });
+            }
+        });
+
+        // Charger le contenu de "Transmettre à"
+        if (data.transmitContent) {
+            document.getElementById('transmitContent').value = data.transmitContent;
+        }
+    }
+}
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+document.getElementById('startButton').addEventListener('click', () => {
+    document.getElementById('daySelection').classList.remove('hidden');
+    document.getElementById('startButton').classList.add('hidden');
+});
+
+document.getElementById('continueDayButton').addEventListener('click', () => {
+    const selectedDate = document.getElementById('inspectionDate').value;
+    if (selectedDate) {
+        document.getElementById('section2').classList.remove('hidden');
+        document.getElementById('daySelection').classList.add('hidden');
+    } else {
+        alert('Veuillez sélectionner une date pour continuer.');
+    }
+});
+
+document.getElementById('generatePdfButton').addEventListener('click', () => {
+    let generatedPdfBlob = null;
+    const date = document.getElementById('inspectionDate').value;
+
+    async function generatePdf() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ 
+            format: 'a4', 
+            unit: 'mm',
+            compress: true
+        });
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('fr-FR', options);
+        }
+
+        const formattedDate = formatDate(date);
+        const margin = 25;
+        const bottomMargin = 25;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        function addNewPage() {
+            doc.addPage();
+            doc.setLineWidth(0.1);
+            doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
+        }
+
+        const logoInput = document.getElementById('logoInput');
+        const savedData = JSON.parse(localStorage.getItem('pvData'));
+        
+        if(savedData?.logo) {
+            try {
+                const logoImg = new Image();
+                await new Promise((resolve, reject) => {
+                    logoImg.onload = resolve;
+                    logoImg.onerror = reject;
+                    logoImg.src = savedData.logo;
+                });
+
+                const baseLogoWidth = 40;
+                const logoWidth = baseLogoWidth * savedData.logoScale;
+                const logoHeight = (logoWidth * logoImg.height) / logoImg.width;
+                
+                doc.addImage(logoImg, 'PNG', 
+                    (doc.internal.pageSize.getWidth() - logoWidth)/2, 
+                    13,
+                    logoWidth, 
+                    logoHeight
+                );
+
+                const baseWatermarkSize = 80;
+                const watermarkSize = baseWatermarkSize * savedData.logoScale;
+                const x = (doc.internal.pageSize.getWidth() - watermarkSize)/2;
+                const y = (doc.internal.pageSize.getHeight() - watermarkSize)/2;
+                
+                doc.setGState(new doc.GState({ opacity: 0.1 }));
+                doc.addImage(logoImg, 'PNG', x, y, watermarkSize, watermarkSize);
+                doc.setGState(new doc.GState({ opacity: 1 }));
+            } catch(e) {
+                console.error('Erreur de chargement du logo', e);
+            }
+        }
+
+        doc.setFont("Times", "normal");
+        doc.setFontSize(14);
+        doc.setFont("Times", "bold");
+        doc.text(`Rapport journalier du : ${formattedDate}`, margin, margin + 37);
+
+        doc.setLineWidth(0.1);
+        doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
+
+        const tableData = [];
+        const nomProjet = savedData.nomProjet || '';
+        const entreprise = savedData.entreprise || '';
+        const maitreOuvrage = savedData.maitreOuvrage || '';
+        const bureauSuivi = savedData.bureauSuivi || '';
+        const commune = savedData.commune || '';
+        const personnelData = savedData.personnel || [];
+        const stockData = savedData.stock || [];
+
+        allSectionsOrder.forEach(sectionId => {
+            const section = document.getElementById(sectionId);
+            if (!section) return;
+            const title = section.querySelector('h3').textContent;
+            const checkbox = section.querySelector('.section-checkbox');
+            if (!checkbox.checked) return;
+
+            let content;
+            if (sectionId === 'descriptionSection') {
+                content = [
+                    ['Nom du Projet', nomProjet],
+                    ['Entreprise', entreprise],
+                    ['Maître d\'ouvrage', maitreOuvrage],
+                    ['Bureau de suivi', bureauSuivi],
+                    ['Commune', commune]
+                ];
+            } else if (sectionId === 'personnelSection') {
+                content = personnelData.map(p => [p.role, p.count]);
+            } else if (sectionId === 'stockSection') {
+                content = stockData.map(s => [s.name, s.quantity]);
+            } else {
+                content = [[{
+                    content: section.querySelector('textarea')?.value || '',
+                    colSpan: 2,
+                    styles: { 
+                        fontStyle: 'normal',
+                        halign: 'left',
+                        fillColor: false,
+                        textColor: [0, 0, 0]
+                    }
+                }]];
+            }
+
+            if (content.length > 0) {
+                tableData.push([{
+                    content: title,
+                    rowSpan: content.length,
+                    styles: {
+                        halign: 'center',
+                        valign: 'middle',
+                        fontStyle: 'bold',
+                        fillColor: [225, 225, 225],
+                        textColor: [40, 40, 40]
+                    }
+                }, ...content[0]]);
+
+                for (let i = 1; i < content.length; i++) {
+                    const row = content[i];
+                    tableData.push(row.map(cell => ({
+                        content: cell,
+                        styles: { fontStyle: 'normal' }
+                    })));
+                }
+            }
+        });
+
+        doc.autoTable({
+            body: tableData,
+            theme: 'grid',
+            headerStyles: {
+                fillColor: [100, 100, 100],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold'
+            },
+            styles: {
+                cellPadding: 0.5,
+                fontSize: 11,
+                halign: 'center',
+                valign: 'middle',
+                lineWidth: 0.2,
+                lineColor: [169,169,169],
+                fillColor: false,
+                textColor: [0,0,0],
+                font: "times",
+                overflow: 'linebreak',
+                lineHeight: 1.2
+            },
+            columnStyles: {
+                0: { cellWidth: 45 },
+                1: { cellWidth: 60 },
+                2: { cellWidth: 65 }
+            },
+            margin: { top: 15, right: 20, bottom: bottomMargin, left: 20 },
+            startY: margin + 45,
+            pageBreak: 'auto',
+        });
+
+        const totalPages = doc.internal.getNumberOfPages();
+        let yPosition;
+        if (totalPages == 1) {
+            addNewPage();
+            yPosition = 25;
+        } else {
+            yPosition = doc.lastAutoTable.finalY + 10;
+        }
+
+        doc.setFontSize(14);
+        doc.setFont("Times", "bold");
+        doc.text("Photos du chantier", 20, yPosition);
+        yPosition += 15;
+
+        const images = [
+            { file: document.getElementById('photo1').files[0], caption: document.getElementById('caption1').value },
+            { file: document.getElementById('photo2').files[0], caption: document.getElementById('caption2').value },
+            { file: document.getElementById('photo3').files[0], caption: document.getElementById('caption3').value },
+            { file: document.getElementById('photo4').files[0], caption: document.getElementById('caption4').value }
+        ];
+
+        async function resizeImage(file) {
+            const img = new Image();
+            const reader = new FileReader();
+            return new Promise((resolve) => {
+                reader.onload = function(event) {
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        const maxWidth = 800;
+                        const maxHeight = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height *= maxWidth / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width *= maxHeight / height;
+                                height = maxHeight;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            if (blob.size > 400 * 1024) {
+                                canvas.toBlob((newBlob) => {
+                                    resolve(newBlob);
+                                }, 'image/jpeg', 0.4);
+                            } else {
+                                resolve(blob);
+                            }
+                        }, 'image/jpeg', 0.5);
+                    };
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        const imageSize = 65;
+        const spaceBetweenImages = 14;
+        const imagesPerRow = 2;
+        let maxImageY = yPosition;
+
+        const imagePromises = images.map((imageData, index) => {
+            return new Promise(async (resolve) => {
+                if (imageData.file) {
+                    const compressedBlob = await resizeImage(imageData.file);
+                    const imgData = await new Promise((resolveImg) => {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            resolveImg(event.target.result);
+                        };
+                        reader.readAsDataURL(compressedBlob);
+                    });
+
+                    const rowIndex = Math.floor(index / imagesPerRow);
+                    const colIndex = index % imagesPerRow;
+                    const xPosition = margin + colIndex * (imageSize + 20);
+                    const yPositionForImage = yPosition + rowIndex * (imageSize + spaceBetweenImages + 20);
+
+                    doc.setDrawColor(0, 0, 0);
+                    doc.setLineWidth(0.4);
+                    doc.rect(xPosition - 0.4, yPositionForImage - 0.4, imageSize + 0.8, imageSize + 0.8);
+
+                    doc.addImage(imgData, 'JPEG', xPosition, yPositionForImage, imageSize, imageSize);
+
+                    const captionYPosition = yPositionForImage + imageSize + 8;
+                    const captionText = `Figure ${index + 1} : ${imageData.caption ? imageData.caption : ''}`;
+
+                    doc.setTextColor(0, 100, 0);
+                    doc.setFontSize(12);
+                    doc.setFont("Helvetica", "italic");
+                    const captionXPosition = xPosition + (imageSize / 2) - (doc.getTextWidth(captionText) / 2);
+                    doc.text(captionText, captionXPosition, captionYPosition);
+
+                    if (captionYPosition > maxImageY) {
+                        maxImageY = captionYPosition;
+                    }
+                    resolve();
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        Promise.all(imagePromises).then(() => {
+            let finalY = maxImageY + 20;
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            const headerText = "Transmettre à :";
+            const headerWidth = doc.getStringUnitWidth(headerText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+            const headerX = (pageWidth - headerWidth) / 2;
+            doc.text(headerText, headerX, finalY);
+
+            finalY += 9;
+            doc.setFontSize(12);
+            const transmitSection = document.getElementById('transmitSection');
+            if (transmitSection && transmitSection.querySelector('.section-checkbox').checked) {
+                const transmitContent = savedData.transmitContent || '';
+                if (transmitContent) {
+                    const lines = transmitContent.split('\n');
+                    lines.forEach(line => {
+                        if (line.trim()) {
+                            doc.text(`- ${line.trim()}`, margin, finalY);
+                            finalY += 6; // Espacement entre les lignes
+                        }
+                    });
+                }
+            }
+
+            const pdfBlob = doc.output('blob');
+            generatedPdfBlob = pdfBlob;
+
+            document.getElementById('previewPdfButton').style.display = 'inline-block';
+        });
+    };
+
+    generatePdf();
+
+    document.getElementById('sendPdfButton').addEventListener('click', () => {
+        if (generatedPdfBlob) {
+            const url = URL.createObjectURL(generatedPdfBlob);
+            let pdfPreview = document.getElementById('pdfPreview');
+            if (!pdfPreview) {
+                pdfPreview = document.createElement('iframe');
+                pdfPreview.id = 'pdfPreview';
+                pdfPreview.style.width = '100%';
+                pdfPreview.style.height = '600px';
+                pdfPreview.style.border = '2px solid #ccc';
+                document.body.appendChild(pdfPreview);
+            }
+
+            pdfPreview.src = url;
+
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).replace(/\//g, '-');
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `R.Journalier_du_${formattedDate}.pdf`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+        } else {
+            alert('Aucun PDF à télécharger. Veuillez d\'abord générer le PDF.');
+        }
+    });
+
+    document.getElementById('previewPdfButton').addEventListener('click', () => {
+        if (generatedPdfBlob) {
+            const pdfUrl = URL.createObjectURL(generatedPdfBlob);
+            const loadingTask = pdfjsLib.getDocument(pdfUrl);
+            loadingTask.promise.then((pdf) => {
+                const pdfImagesContainer = document.getElementById('pdfImages');
+                pdfImagesContainer.innerHTML = '';
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    pdf.getPage(pageNum).then((page) => {
+                        const scale = 1.5;
+                        const viewport = page.getViewport({ scale });
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+
+                        const renderTask = page.render({
+                            canvasContext: context,
+                            viewport: viewport
+                        });
+
+                        renderTask.promise.then(() => {
+                            const img = document.createElement('img');
+                            img.src = canvas.toDataURL();
+                            img.style.marginBottom = '20px';
+                            pdfImagesContainer.appendChild(img);
+                        });
+                    });
+                }
+
+                document.getElementById('pdfPreview').style.display = 'block';
+                document.getElementById('sendPdfButton').style.display = 'inline-block';
+            });
+        } else {
+            alert('Veuillez générer un PDF avant de l\'afficher.');
+        }
+    });
+});
+        </script>
+    </div>
+</body>
+</html>
